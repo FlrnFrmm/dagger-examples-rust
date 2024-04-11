@@ -1,6 +1,10 @@
+mod configuration;
+
 use eyre::Result;
 use dagger_sdk::{Query, File, Container};
+use clap::Parser;
 
+use configuration::Configuration;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -25,10 +29,12 @@ async fn build_backend(client: &Query) -> File {
 }
 
 async fn build_prod_image(client: &Query, build: File) -> Container {
+    let Configuration { port } = Configuration::parse();
     client
         .container()
         .from("gcr.io/distroless/static-debian12")
         .with_file(".", build)
+        .with_env_variable("PORT", port.to_string())
         .with_entrypoint(vec!["./axum-backend"])
 }
 
